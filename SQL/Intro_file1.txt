@@ -1,0 +1,418 @@
+SQL- used to manage and query the data
+DDL - Data Definition Language 		- Create Drop Alter Truncate 
+DML - Data Manipulation Language	- Insert Update Delete Merge 
+DCL - Data Control Language 		- Grant Revoke Comimit Rollback
+DQL	- Data Query Language			- Select 
+
+
+NOSQL- MONGODB
+
+show dbs- show the databsses
+use <dbname>- will create db if not exist else will use the database (use ust_db)
+db.createCollection("employees")- will create the empty collection with a name 'employees'
+show collections- to show collections in that particular database
+db.dropDatabase()- drop database and collection inside it 
+
+
+--Insertion--
+
+db.employees.insertOne(
+{
+	firstName: "Affan",
+	lastName: "MNM",
+	email: "affan@email.com",
+	salary: 20000,
+	skills: ['python','ml','datascience','sql','web'],
+	address: { district:"Palakkad", state:"Kerala" }
+
+}
+)
+
+
+db.employees.insertMany([
+{
+	firstName: "Afshan",
+	lastName: "ZNM",
+	email: "afshan@email.com",
+	salary: 25000,
+	skills: ['ayurveda','life science','medicine','yoga'],
+	address: { district:"Palakkad", state:"Kerala" }
+
+},
+{
+	firstName: "Nigar",
+	lastName: "BMV",
+	email: "nigar@email.com",
+	salary: 80000,
+	skills: ['python','java','c','c++'],
+	address: { district:"Thrissur", state:"Kerala" }
+
+}
+]);
+
+--finding document--
+db.employees.find({firstname:'Affan'})		- give all docs with firstname Affan
+db.employees.findOne({firstname:'Affan'})	- give first docs with firstName Affan 
+
+$ => query operator
+db.employees.find({salary: {$lt:30000}})  
+
+$lt - less than, $gt greater than, $eq equal , $ne notequal, $gte $lte , $and $or $not $nor 
+$slice, $regex
+
+
+--projections--
+db.employees.find({skills: {$in :['python','java'] }}, {firstName:1, lastName:1, _id:0, salary: 1} );
+
+db.employees.find({skills: {$in :['python','java'] }}, { _id:0, address:0} );
+
+db.employees.find({"address.district": "Palakkad"});
+
+db.employee.find({$and: [{lastName: 'MNM'},{salary: {$gt: 30000}}]})
+db.employee.find({$or: [{lastName: 'MNM'},{salary: {$gt: 30000}}]})
+
+db.employees.find({skills: {$all:["python"]}})  -- all documents with skill python
+db.employees.find({skills: {$size:2}})     		-- all documents with num of skills > 2 
+db.survey.find({results: {$elemmatch: {product: "xyz", score: {$gte :8}}}})  		$elemmatch -- used only in array of objects 
+db.survey.find({}, {results: {$slice: 1} })
+
+
+________updations_________
+db.employees.updateOne({lastName:'MNM'},{$set:{lastName:'Mohammed'}})		- only update first occurance of the condition
+db.employees.updateMany({lastName:'MNM'},{$set:{lastName:'Mohammed'}})		- only update all the occurance of condition
+
+db.employees.updateMany({},{$currentDate:{lastModified: true}}) 			- update all documents and add lastModifiedto every document
+ 
+db.employees.updateMany({},[{$set: {lastModified: "$$NOW",salary:60000}},{$set:{status:'Active'}}])				- $set add new data to doc
+db.employees.updateOne({firstName: 'Affan'},[{$set: {lastModified: "$$NOW",salary:40000}},{$unset:"status"}])	- remove the data from doc__
+
+
+db.employees.updateOne({firstName: 'Sherina'},{$set: {department: 'testing', lastName:'M', salary: 40000}},{upsert:true} - if sherina doesnt exist it will add new data, if exists, it will update. 
+db.employees.updateOne({firstName: 'Afshan',skills: 'life science'},{$set:{"skills.$":'Biology'}}) -- if we want to update inside a array, then use "arrayname.$", here array is skills 
+
+db.employees.deleteOne({})
+db.employees.deleteMany({})
+_______________________________
+
+aggregate functions
+
+db.employees.aggregate([{$match:{salary:40000}}])
+db.employees.aggregate([{$group:{salary:40000}}])
+
+db.employees.aggregate([{$group: {_id:'$lastName',totalPeople:{$sum:1}}}]) ; --total sum of each lastName
+db.employees.aggregate([{$group: {_id:null,totalCount:{$count:{}}}}]) ;		 --total count of ids
+
+db.sales.aggregate([{$group : {_id: '$item', totalSales: {$sum: {$multiply["$price","$quantity"]}}])
+
+db.sales.aggregate([{$group : {_id: '$item', totalSales: {$sum: {$multiply["$price","$quantity"]}},
+						{$match : {"totalSalesAmount": {$gte:100}}}]) 		 -- aggregation and then filtering using mathching
+
+db.sales.aggregate([{$match: {"date":{$gte: new ISODate("2016-01-01"), 
+		$lt: new ISODate("2020-01-01")}}}])
+
+ 
+ 
+db.sales.aggregate([{$match: {"date":{$gte: new ISODate("2016-01-01"), 
+		$lt: new ISODate("2020-01-01")}}},{$group:{_id:{$dateToString: {format: "%Y-%m-%d",date="$date"}},
+		totalSalesAmount: {$sum: {$multiply : ["$price","$quantity"]}},
+		avgQuantity:{$avg: "$quantity" },count:{$sum:1}},{$match:{"TotalAmount":{$gte:50}}},
+		{$sort:{totalSalesAmount:-1}}
+		])
+
+
+
+________________________________________________________________________________________________________________________________
+
+• Create a MongoDB database named "adventure_game".
+• Design three collections to represent the core elements of your game: 
+✓ Locations (name, description, exits - references to other locations)
+✓ Characters (name, description, location - reference to a location)
+✓ Items (name, description, location - reference to a location)
+• Populate each collection with initial data to create your starting game world. This might 
+include a few locations, characters, and items strategically placed.
+• Implement functionalities (using a MongoDB client or driver) to perform CRUD 
+operations: 
+• Create new locations, characters, and items.
+• Read existing data from each collection based on specific criteria (e.g., find a character 
+by name).
+• Update information about locations, characters, or items (e.g., move an item to a new 
+location).
+• Delete unnecessary data from the collections (be mindful of maintaining game world 
+consistency)
+_________________________________________________________________________________________________________________________________
+
+use adventure_game
+
+db.createCollection("locations")
+db.createCollection("characters")
+db.createCollection("items")
+
+db.locations.insertMany([{
+name:'India',
+description:'loc1',
+exits:['UAE','England']
+},
+{
+name:'UAE',
+description:'loc2',
+exits:['England']
+},
+{
+name:'Africa',
+description:'loc3',
+exits:['India','UAE','England']
+},
+{
+name:'England',
+description:'loc4',
+exits:[]
+}
+])
+
+
+db.characters.insertMany([
+{	name:'Alex',
+	description:'M',
+	exits:['India','USA']
+},
+{	name:'Ben',
+	description:'M',
+	exits:['England','UAE']
+},
+{	name:'Clair',
+	description:'W',
+	exits:['Africa','Australia']
+}
+]);
+
+
+db.items.insertMany([
+{name:'Taj',description:'Monument',location:'India'},
+{name:'Burj',description:'Hotel',location:'UAE'},
+{name:'BigBen',description:'Clock',location:'England'},
+{name:'Sahara',description:'Desert',location:'Africa'}
+])
+
+
+CRUD
+
+C
+db.characters.insertOne({
+	name:'Diana',
+	description:'W',
+	exits:['England','India']
+
+})
+
+R
+db.characters.find({exits: {$in :["India"] }});
+
+U
+db.items.updateOne({name:'BigBen'},{$set:{description:'Clock Tower'}})
+
+D
+db.items.deleteOne({location: ‘England’})
+
+
+
+
+db.location.findOne({ name: 'India' });
+
+db.characters.find({ description: 'w' });
+
+db.characters.find({
+    description: 'M',
+    $or: [{ name: 'Alex' }, { name: 'Ben' }]
+});
+_________________________________________________________________________________________________________________________________
+assignment 2
+
+Q1
+adventure_game> db.locations.aggregate([
+ {
+     $group : {_id:null,count:{$count:{}}}
+ }
+ ])
+[ { _id: null, count: 4 } ]
+adventure_game> db.locations.aggregate({$count:"total_rows"})
+[ { total_rows: 4 } ]
+
+
+Q2
+
+db.locations.aggregate([
+    {
+        $project: {
+            numExits: { $size: "$exits" }
+        }
+    },
+    {
+        $group: {
+            _id: null,
+            averageExits: { $avg: "$numExits" }
+        }
+    }
+]).forEach(result => {
+    print("Average number of exits per location: " + result.averageExits);
+});
+
+or 
+
+db.locations.aggregate([
+    {
+        $project: {
+            numExits: { $size: "$exits" }
+        }
+    },
+    {
+        $group: {
+            _id: null,
+            Avg_Exits: { $avg: "$numExits" }
+        }
+    }
+]);
+
+--total exits in each location--	
+db.locations.aggregate ({	$project: { numExits: { $size: "$exits" }}})
+
+
+
+--Q3--
+db.items.updateOne({"name":"Taj"},{$set: {"type":"Tourism"}});
+db.items.updateOne({"name":"Burj"},{$set: {"type":"Business"}});
+db.items.updateOne({"name":"Sahara"},{$set: {"type":"Tourism"}});
+
+
+db.items.aggregate
+([ {set:
+{ $group : {_id: "type", noofitem: {$sum: 1}}},
+{ $sort : {noofitem : -1}},
+{ $limit : 1}}
+]);
+
+db.items.aggregate([
+    {
+        $group: { _id: "$type", Most_Prevalent: { $sum: 1 } }
+    },
+    {
+        $sort: { Most_Prevalent: -1 }
+    },
+    {
+        $limit: 1
+    }
+]);
+
+
+db.items.remove({type:'Tourism'})
+
+________________________________________________________________________________________________________________________________
+________________________________________________________________________________________________________________________________
+CASE Study : Restaurant Data - ZOMATO
+
+1 Number of orders in each Location
+
+db.restaurant.aggregate([
+    {
+        $group: { _id: "$location", numOrders: { $sum: 1 } }
+    },
+    {
+        $sort: { numOrders: -1 }
+    }
+])
+
+
+
+2 Find total number of hotels in Bangalore and list top 5 rated 
+db.restaurant.aggregate([
+	{$group: {_id: "$name",total: {$sum : 1}}},
+	{$sort : {total: -1}},
+	{$limit : 5}
+])
+
+3 Find the most liked dishes by the customer
+
+db.restaurant.aggregate([
+    { $unwind: "$dish_liked" },
+    { $group: { _id: "$dish_liked", count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+    { $limit: 10 }
+])
+
+4 Find total Sales in each hotel.
+
+
+db.restaurant.aggregate([
+{	$group:{_id:"$name", totalSales:{$sum:"$approx_cost(for two people)"}}},
+{	$sort:{totalSales:-1}}
+])
+
+
+
+5 Find Which hotels has highest number of customers
+
+db.restaurant.aggregate(
+{$group:{_id:"$name", customerCount:{$sum:1}}},
+{$sort:{customerCount:-1}},
+{$limit:10}
+)
+
+
+6 Find total sales of each dish in each hotel
+
+db.restaurant.aggregate([
+{$match:{dish_liked:{$ne:null}}},
+{$group:{_id:{name:"$name",dish_liked:"$dish_liked"},
+total_sales:{$sum:"$approx_cost(for two people)"}}},
+{$sort:{"_id.name":1, total_sales:-1}}
+])
+
+7 Find the hotels which has menu and which don't have menu
+db.restaurant.find({menu_item:{$exists:true, $eq:[]}},{name:1, _id:0})
+db.restaurant.find({menu_item:{$exists:true, $ne:[]}},{name:1, _id:0})
+
+
+8 Find the average sales in each town in Bangalore and sort the result location wise 
+
+
+db.restaurant.aggregate([
+{	$group:{_id:"$listed_in(city)", 
+	average_amount:{$avg:"$approx_cost(for two people)"}}
+},
+{$sort:{"_id":-1}}
+])
+
+9 Find the hotels which has rating > 4.5 and cost < 500
+
+db.restaurant.aggregate([ 
+{ $match: { $expr: { $and: [ { $regexMatch: { input: "$rate", regex: /^[0-9]\.[0-9]+\/[0-9]+$/ } },
+  { $gt: [{ $toDouble: { $arrayElemAt: [{ $split: ["$rate", "/"] }, 0] } }, 4.5] }] }, "approx_cost(for two people)": {$lt: 500}}}, 
+{ $project: { "name": 1, "rate": 1, "approx_cost(for two people)": 1, "cuisines": 1 } }])
+
+
+10 Find the best rated hotels ,calculate the total votes and sort it in descending order of votes
+
+db.restaurant.aggregate([ 
+{$match: { $expr: { $and: [{ $regexMatch: { input: "$rate", regex: /^[0-9]\.[0-9]+\/[0-9]+$/ }}, 
+{$not: { $in: ["$rate", ["NEW"]] } }]}}},
+ { $addFields: { numericRating: { $toDouble: { $arrayElemAt: [{ $split: ["$rate", "/"] }, 0] }}}}, 
+ { $group: { _id: "$name", averageRating: { $avg: "$numericRating" }, totalVotes: { $sum: "$votes" }}}, 
+ { $sort: { averageRating: -1, totalVotes: -1 } }, 
+ { $project: { _id: 0, name: "$_id", averageRating: 1, totalVotes: 1 }}
+])
+
+
+
+11 Delete the column dish_liked from the collection
+
+
+db.restaurant.updateMany( {}, { $unset: { dish_liked: "" } } )
+
+12 find the same named restaurants using $text and $Search
+
+db.restaurant.createIndex({ name: "text" });
+db.restaurant.find({ $text: { $search: "\"T3H Cafe\"" } });
+
+
+
+
+
